@@ -15,7 +15,7 @@ Git::instaweb - git instaweb on plack
 
 =head1 SYNOPSIS
 
-    % cd git-controlled-dir
-    % run-git-instaweb
+  % cd git-controlled-dir
+  % run-git-instaweb
 
 =cut
