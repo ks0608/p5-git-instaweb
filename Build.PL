@@ -12,6 +12,7 @@ my $build = Module::Build->new(
         'CGI::Emulate::PSGI' => 0,
         'File::ShareDir'     => 0,
         'Path::Class'        => 0,
+        'Capture::Tiny'      => 0,
         perl                 => '5.008',
     },
 
