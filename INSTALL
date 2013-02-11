@@ -2,6 +2,4 @@ INSTALL
 
     % git clone --recursive git://github.com/ks0608/p5-git-instaweb.git
     % cd p5-git-instaweb
-    % perl Build.PL
-    % ./Build
-    % ./Build install
+    % cpanm .
