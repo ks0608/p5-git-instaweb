@@ -13,3 +13,5 @@
 
 # Avoid archives of this distribution
 \bGit-instaweb-[\d\.\_]+
+
+^README.pod$

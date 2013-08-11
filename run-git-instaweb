@@ -4,37 +4,33 @@ use warnings;
 use utf8;
 use File::ShareDir qw(dist_dir);
 use Capture::Tiny qw(capture);
-use Path::Class;
+use Path::Tiny qw(path);
 use Plack::Runner;
 use Plack::App::WrapCGI;
 use Plack::Builder;
 
-sub get_config {
+$ENV{GITWEB_CONFIG} = do {
     my ($top_dir, $stderr, $exit) = capture {
         system qw(git rev-parse --show-toplevel);
     };
     die $stderr if $exit != 0 || !$top_dir;
     chomp $top_dir;
 
-    my $gitweb_dir = dir($top_dir, '.git', 'gitweb');
-    my $tmp_dir    = dir($gitweb_dir, 'tmp');
-    $tmp_dir->mkpath if !-d $tmp_dir;
+    my $gitweb_dir = path $top_dir, '.git', 'gitweb';
+    my $tmp_dir    = path $gitweb_dir, 'tmp';
+    $tmp_dir->mkpath unless $tmp_dir->is_dir;
 
-    my $config = file($gitweb_dir, 'gitweb_config.perl');
-    my $fh     = $config->open('>') or die $!;
-    $fh->printf(<<'EOF', $top_dir, $tmp_dir);
+    my $config = path $gitweb_dir, 'gitweb_config.perl';
+    $config->spew(sprintf <<'...', $top_dir, $tmp_dir);
 our $projectroot   = "%s";
 our $git_temp      = "%s";
 our $projects_list = $projectroot;
 $feature{'remote_heads'}{'default'} = [1];
-EOF
-    $fh->close;
-    return $config;
-}
+...
+    $config->stringify;
+};
 
-local $ENV{GITWEB_CONFIG} = get_config();
-
-my $share_dir = dist_dir('Git-instaweb');
+my $share_dir = dist_dir 'Git-instaweb';
 
 my $app = builder {
     enable 'Static', (
@@ -42,10 +38,23 @@ my $app = builder {
         root => $share_dir,
     );
     mount '/' => Plack::App::WrapCGI->new(
-        script => file($share_dir, 'gitweb.cgi')
+        script => path($share_dir, 'gitweb.cgi')
     )->to_app;
 };
 
 my $runner = Plack::Runner->new;
 $runner->parse_options(@ARGV);
 $runner->run($app);
+
+__END__
+
+=head1 NAME
+
+run-git-instaweb - run git instaweb on Plack
+
+=head1 SYNOPSIS
+
+  % cd git-controlled-dir
+  % run-git-instaweb
+
+=cut

@@ -1,7 +1,6 @@
 package Git::instaweb;
 use strict;
 use warnings;
-use utf8;
 
 our $VERSION = '0.01';
 
@@ -17,5 +16,11 @@ Git::instaweb - git instaweb on plack
 
   % cd git-controlled-dir
   % run-git-instaweb
+
+=head1 INSTALL
+
+  % git clone --recursive git://github.com/shoichikaji/p5-git-instaweb.git
+  % cd p5-git-instaweb
+  % cpanm .
 
 =cut
