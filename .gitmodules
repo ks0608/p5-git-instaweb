@@ -1,3 +1,0 @@
-[submodule "share/static"]
-	path = share/static
-	url = git://github.com/kogakure/gitweb-theme.git
