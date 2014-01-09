@@ -40,10 +40,11 @@ $ENV{GITWEB_CONFIG} = do {
 
     my $config = catfile $gitweb_dir, 'gitweb_config.perl';
     spew $config, sprintf(<<'...', $top_dir, $name, $tmp_dir);
-our $projectroot   = '%s';
-our $site_name     = '%s';
-our $git_temp      = '%s';
-our $projects_list = $projectroot;
+our $projectroot      = '%s';
+our $site_name        = '%s';
+our $git_temp         = '%s';
+our $project_maxdepth = 1;
+our $projects_list    = $projectroot;
 $feature{'remote_heads'}{'default'} = [1];
 ...
     $config;
