@@ -1,0 +1,75 @@
+#!perl
+use strict;
+use warnings;
+use utf8;
+use File::ShareDir::ProjectDistDir qw(dist_dir);
+use File::Spec::Functions qw(catdir catfile);
+use File::Path qw(mkpath);
+use File::Basename qw(basename);
+use Plack::Runner;
+use Plack::App::WrapCGI;
+use Plack::Builder;
+sub slurp {
+    my $file = shift;
+    open my $fh, "<:utf8", $file or die "$file: $!";
+    local $/; scalar <$fh>;
+}
+sub spew {
+    my ($file, $msg) = @_;
+    open my $fh, ">:utf8", $file or die "$file: $!";
+    print {$fh} $msg;
+}
+
+$ENV{GITWEB_CONFIG} = do {
+    my $top_dir = `git rev-parse --show-toplevel 2>&1`;
+    chomp $top_dir;
+    $? == 0 or die "ERROR git rev-parse --show-toplevel: $top_dir";
+
+    my $gitweb_dir = catdir $top_dir, '.git', 'gitweb';
+    my $tmp_dir    = catdir $gitweb_dir, 'tmp';
+    if (!-d $tmp_dir) {
+        mkpath $tmp_dir or die "mkpath $tmp_dir: $!";
+    }
+
+    my $name = basename $top_dir;
+
+    my $desc_file = catfile $top_dir, ".git", "description";
+    if (!-f $desc_file || slurp($desc_file) =~ /^Unnamed/) {
+        spew $desc_file, $name;
+    }
+
+    my $config = catfile $gitweb_dir, 'gitweb_config.perl';
+    spew $config, sprintf(<<'...', $top_dir, $name, $tmp_dir);
+our $projectroot   = '%s';
+our $site_name     = '%s';
+our $git_temp      = '%s';
+our $projects_list = $projectroot;
+$feature{'remote_heads'}{'default'} = [1];
+...
+    $config;
+};
+
+my $share_dir = dist_dir 'Git-instaweb';
+my $gitweb    = catfile $share_dir, 'gitweb.cgi';
+
+my $app = builder {
+    enable 'Static', path => qr{^/static/}, root => $share_dir;
+    Plack::App::WrapCGI->new(script => $gitweb)->to_app;
+};
+
+my $runner = Plack::Runner->new;
+$runner->parse_options(@ARGV);
+$runner->run($app);
+
+__END__
+
+=head1 NAME
+
+run-git-instaweb - run git instaweb on Plack
+
+=head1 SYNOPSIS
+
+  % cd git-controlled-dir
+  % run-git-instaweb
+
+=cut
